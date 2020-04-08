@@ -1,13 +1,30 @@
 const express = require('express');
-
+const userDB = require('./userDb');
+const postDB = require('../posts/postDb');
 const router = express.Router();
 
-router.post('/', (req, res) => {
-  // do your magic!
+router.post('/', validateUser, (req, res) => {
+  try {
+    const newUser= {
+      name: req.body.name
+    }
+    userDB.insert(newUser).then( response => res.send(response))
+  } catch {
+    res.status(500).json({ message: 'am error has occurred'})
+  }
 });
 
-router.post('/:id/posts', (req, res) => {
-  // do your magic!
+router.post('/:id/posts', validateUser, validatePost, (req, res) => {
+  const id = req.params.id;
+  try{
+    const newPost = {
+      text: req.body.text,
+      user_id: id
+    } 
+    postDB.insert(newPost).then(response => res.send(response))
+  } catch{
+    res.status(500).json({message: 'an error has occurred'})
+  }
 });
 
 router.get('/', (req, res) => {
@@ -33,15 +50,30 @@ router.put('/:id', (req, res) => {
 //custom middleware
 
 function validateUserId(req, res, next) {
-  // do your magic!
+ const id = req.params.id;
+ userDB.getById(id).then(res =>{
+   if (res){
+     next();
+   } else {
+     res.status(400).json({message: 'invalid user id'})
+   }
+ })
 }
 
 function validateUser(req, res, next) {
-  // do your magic!
+  if (req.body.name){
+    next();
+  } else {
+    res.status(400).json({message: 'missiong required name field'})
+  }
 }
 
 function validatePost(req, res, next) {
-  // do your magic!
+  if (req.body.text){
+    next();
+  } else {
+    res.status(400).json({message: 'missing required text'})
+  }
 }
 
 module.exports = router;
