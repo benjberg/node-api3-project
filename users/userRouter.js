@@ -14,7 +14,7 @@ router.post('/', validateUser, (req, res) => {
   }
 });
 
-router.post('/:id/posts', validateUser, validatePost, (req, res) => {
+router.post('/:id/posts', validateUserId, validatePost, (req, res) => {
   const id = req.params.id;
   try{
     const newPost = {
@@ -38,17 +38,17 @@ router.get('/', (req, res) => {
 router.get('/:id', validateUserId, (req, res) => {
   const id = req.params.id;
   try{
-    userDB.getById(id).then(response => res.send(response));
+    postDB.getById(id).then(response => res.send(response));
   } catch{
     res.status(500).json({message: 'an error has occurred'})
   }
 });
 
-router.get('/:id/posts', (req, res) => {
+router.get('/:id/posts',  validateUserId, (req, res) => {
   const id = req.params.id;
   try{
-    postDB.get().then(reponse => {
-      const userPost= response.filter(post => post.user_id === parseInt(id));
+    postDB.get().then(response => {
+      const userPost = response.filter(post => post.user_id === parseInt(id));
       res.send(userPost);
     })
   }catch{
@@ -56,12 +56,27 @@ router.get('/:id/posts', (req, res) => {
   }
 });
 
-router.delete('/:id', (req, res) => {
-  // do your magic!
+router.delete('/:id', validateUserId, (req, res) => {
+  const id = req.params.id;
+  try{
+   userDB.remove(id).then(response => {
+     res.send({success: response})
+   })
+    } catch{
+      res.status(500).json({message: 'an error has occurred'})
+    }
 });
 
-router.put('/:id', (req, res) => {
-  // do your magic!
+router.put('/:id',validateUserId, validateUser, (req, res) => {
+  const id = req.params.id;
+  try{
+    const userUpdate = {
+      name: req.body.name
+    }
+    userDB.update(id, userUpdate).then(response => res.send({success: response}))
+  } catch {
+    res.status(500).json({message: 'an error has occurred'})
+  }
 });
 
 //custom middleware
@@ -81,7 +96,7 @@ function validateUser(req, res, next) {
   if (req.body.name){
     next();
   } else {
-    res.status(400).json({message: 'missiong required name field'})
+    res.status(400).json({message: 'missing required name field'})
   }
 }
 
