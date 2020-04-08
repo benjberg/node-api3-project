@@ -28,15 +28,32 @@ router.post('/:id/posts', validateUser, validatePost, (req, res) => {
 });
 
 router.get('/', (req, res) => {
-  // do your magic!
+  try{
+    userDB.get().then(response => res.send(response))
+  } catch{
+    res.status(500).json({message: 'an error has occurred'})
+  }
 });
 
-router.get('/:id', (req, res) => {
-  // do your magic!
+router.get('/:id', validateUserId, (req, res) => {
+  const id = req.params.id;
+  try{
+    userDB.getById(id).then(response => res.send(response));
+  } catch{
+    res.status(500).json({message: 'an error has occurred'})
+  }
 });
 
 router.get('/:id/posts', (req, res) => {
-  // do your magic!
+  const id = req.params.id;
+  try{
+    postDB.get().then(reponse => {
+      const userPost= response.filter(post => post.user_id === parseInt(id));
+      res.send(userPost);
+    })
+  }catch{
+    res.status(500).json({ message: 'an error has occurred'})
+  }
 });
 
 router.delete('/:id', (req, res) => {
